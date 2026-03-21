@@ -1,0 +1,34 @@
+# Node (vale pra frontend e backend)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build / Expo / React
+dist/
+build/
+.expo/
+.web-build/
+.expo-shared/
+
+# Ambiente
+.env
+.env.*
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Coverage / testes
+coverage/
+
+# Cache
+.cache/
