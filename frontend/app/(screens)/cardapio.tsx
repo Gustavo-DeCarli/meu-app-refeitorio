@@ -18,19 +18,27 @@ export default function Cardapio() {
     const [editing, setEditing] = useState<any>(null);
     const [text, setText] = useState('');
 
-    // useEffect(() => {
-    //     api.get('/menus').then(res => setMenus(res.data));
-    //     api.get(`/favorites/${parsedUser.id}`).then(res => setFavorites(res.data));
-    // }, []);
+    const today = new Date();
+    const todayStr = today.toISOString().split('T')[0];
+    
+    const dayOfWeek = today.getDay() || 7;
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - dayOfWeek + 1);
+    
+    const weekDates = Array.from({ length: 7 }).map((_, i) => {
+        const d = new Date(startOfWeek);
+        d.setDate(startOfWeek.getDate() + i);
+        return d.toISOString().split('T')[0];
+    });
+
+    const diasSemana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+
+    const favoriteMenus = menus.filter(m => favorites.includes(m.id));
 
     useEffect(() => {
-        const today = new Date();
-        const dayOfWeek = today.getDay() || 7;
-        const startOfWeek = new Date(today);
-        startOfWeek.setDate(today.getDate() - dayOfWeek + 1);
         const endOfWeek = new Date(startOfWeek);
         endOfWeek.setDate(startOfWeek.getDate() + 6);
-        const formatDate = (date) => date.toISOString().split('T')[0];
+        const formatDate = (date: Date) => date.toISOString().split('T')[0];
 
         api.get('/menus', {
             params: {
@@ -63,17 +71,28 @@ export default function Cardapio() {
 
     const save = async () => {
         if (!editing) return;
-
         const items = text.split('\n');
-
         await api.put(`/menus/${editing.id}`, { items });
-
         setMenus(prev =>
             prev.map(m => m.id === editing.id ? { ...m, items } : m)
         );
-
         setEditing(null);
     };
+
+    const renderMenuCard = (menu: any, dateStr: string, isHighlighted = false) => (
+        <MenuCard
+            key={`menu-${menu.id}-${dateStr}`}
+            menu={menu}
+            isFav={favorites.includes(menu.id)}
+            isServidor={parsedUser.type === 'servidor'}
+            onToggleFavorite={() => toggleFavorite(menu.id)}
+            onShare={() => handleShare(menu)}
+            onEdit={() => {
+                setEditing(menu);
+                setText(menu.items.join('\n'));
+            }}
+        />
+    );
 
     return (
         <View style={styles.container}>
@@ -89,21 +108,37 @@ export default function Cardapio() {
                     <Text style={styles.logout}>Sair</Text>
                 </TouchableOpacity>
             </View>
+
             <ScrollView style={styles.content}>
-                {menus.map(menu => (
-                    <MenuCard
-                        key={menu.id}
-                        menu={menu}
-                        isFav={favorites.includes(menu.id)}
-                        isServidor={parsedUser.type === 'servidor'}
-                        onToggleFavorite={() => toggleFavorite(menu.id)}
-                        onShare={() => handleShare(menu)}
-                        onEdit={() => {
-                            setEditing(menu);
-                            setText(menu.items.join('\n'));
-                        }}
-                    />
-                ))}
+                {favoriteMenus.length > 0 && (
+                    <View style={styles.favoritesSection}>
+                        <Text style={styles.favoritesTitle}>⭐ Seus Favoritos em Destaque</Text>
+                        {favoriteMenus.map(menu => renderMenuCard(menu, menu.date, true))}
+                    </View>
+                )}
+
+                <Text style={styles.sectionTitle}>Semana Atual</Text>
+                {weekDates.map((dateStr, index) => {
+                    const isToday = dateStr === todayStr;
+                    const dayMenus = menus.filter(m => m.date === dateStr);
+
+                    return (
+                        <View key={index} style={[styles.dayContainer, isToday && styles.dayContainerToday]}>
+                            <View style={[styles.dayHeader, isToday && styles.dayHeaderToday]}>
+                                <Text style={[styles.dayTitle, isToday && styles.textWhite]}>
+                                    {diasSemana[index]} {isToday ? '(Hoje)' : ''}
+                                </Text>
+                            </View>
+                            
+                            {dayMenus.length > 0 ? (
+                                dayMenus.map(menu => renderMenuCard(menu, dateStr))
+                            ) : (
+                                <Text style={styles.noMenuText}>Sem cardápio para este dia.</Text>
+                            )}
+                        </View>
+                    );
+                })}
+                <View style={{ height: 40 }} />
             </ScrollView>
 
             <EditMenuModal
@@ -121,13 +156,67 @@ const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f3f4f6' },
     content: { padding: 16 },
     welcome: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-    badge: { color: '#dcfce7', fontSize: 12 },
-    logout: { color: '#fff' },
+    badge: { color: '#dcfce7', fontSize: 12, marginTop: 4 },
+    logout: { color: '#fff', fontWeight: 'bold' },
     header: {
         backgroundColor: '#15803d',
         padding: 20,
-        paddingTop: 40,
         flexDirection: 'row',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        alignItems: 'center'
     },
+    
+    favoritesSection: {
+        marginBottom: 24,
+        backgroundColor: '#fef08a',
+        padding: 12,
+        borderRadius: 8,
+    },
+    favoritesTitle: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        color: '#854d0e',
+        marginBottom: 8,
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: '#374151',
+        marginBottom: 16,
+    },
+    dayContainer: {
+        marginBottom: 16,
+        backgroundColor: '#fff',
+        borderRadius: 8,
+        overflow: 'hidden',
+        borderWidth: 1,
+        borderColor: '#e5e7eb'
+    },
+    dayContainerToday: {
+        borderColor: '#15803d',
+        borderWidth: 2,
+    },
+    dayHeader: {
+        backgroundColor: '#f9fafb',
+        padding: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#e5e7eb'
+    },
+    dayHeaderToday: {
+        backgroundColor: '#15803d',
+    },
+    dayTitle: {
+        fontWeight: 'bold',
+        color: '#4b5563',
+        fontSize: 16,
+    },
+    textWhite: {
+        color: '#ffffff',
+    },
+    noMenuText: {
+        padding: 16,
+        color: '#9ca3af',
+        fontStyle: 'italic',
+        textAlign: 'center'
+    }
 });
