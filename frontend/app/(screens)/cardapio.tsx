@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import {
-    ScrollView, View, StyleSheet, Alert, Share
+    ScrollView, View, StyleSheet, Share,
+    TouchableOpacity, Text
 } from 'react-native';
-import { api } from '../(services)/api';
-import { MenuCard } from '../(components)/MenuCard';
-import { EditMenuModal } from '../(components)/EditMenuModal';
+import { api } from '../../services/api';
+import MenuCard from '../../componentes/MenuCard'
+import EditMenuModal from '../../componentes/EditMenuModal';
 
 export default function Cardapio() {
+    const router = useRouter();
     const { user } = useLocalSearchParams();
     const parsedUser = JSON.parse(user as string);
 
@@ -55,7 +57,23 @@ export default function Cardapio() {
     };
 
     return (
+        <>
+
+
+
         <View style={styles.container}>
+            <View style={styles.header}>
+                <View>
+                    <Text style={styles.welcome}>Olá, {parsedUser.name}</Text>
+                    <Text style={styles.badge}>
+                        Acesso: {parsedUser.type.toUpperCase()}
+                    </Text>
+                </View>
+
+                <TouchableOpacity onPress={() => router.replace('/')}>
+                    <Text style={styles.logout}>Sair</Text>
+                </TouchableOpacity>
+            </View>
             <ScrollView style={styles.content}>
                 {menus.map(menu => (
                     <MenuCard
@@ -81,10 +99,21 @@ export default function Cardapio() {
                 onSave={save}
             />
         </View>
+        </>
     );
 }
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#f3f4f6' },
-    content: { padding: 16 }
+    content: { padding: 16 },
+    welcome: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
+    badge: { color: '#dcfce7', fontSize: 12 },
+    logout: { color: '#fff' },
+    header: {
+        backgroundColor: '#15803d',
+        padding: 20,
+        paddingTop: 40,
+        flexDirection: 'row',
+        justifyContent: 'space-between'
+    },
 });

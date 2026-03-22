@@ -3,7 +3,7 @@ import { useState } from 'react';
 import {
     View, TextInput, TouchableOpacity, Text, Alert, StyleSheet
 } from 'react-native';
-import { api } from './(services)/api';
+import { api } from '../services/api';
 
 export default function Index() {
     const router = useRouter();

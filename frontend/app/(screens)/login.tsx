@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { View, TextInput, TouchableOpacity, Text, Alert } from 'react-native';
-import { api } from '../(services)/api';
+import { api } from '../../services/api';
 
-export function LoginScreen({ navigation }: any) {
+export default function LoginScreen({ navigation }: any) {
     const [login, setLogin] = useState('');
     const [senha, setSenha] = useState('');
 

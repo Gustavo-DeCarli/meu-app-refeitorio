@@ -1,8 +1,8 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { User } from '../(types)';
+import { User } from '../types';
 
-export function Header({ user, onLogout }: { user: User; onLogout: () => void }) {
+export default function Header({ user, onLogout }: { user: User; onLogout: () => void }) {
     return (
         <View style={styles.header}>
             <View>

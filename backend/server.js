@@ -54,8 +54,7 @@ app.post('/api/login', async (req, res) => {
 
 app.get('/api/menus', async (req, res) => {
     try {
-        const { start, end } = req.query;
-        const [menus] = await pool.query('SELECT id, DATE_FORMAT(date, "%Y-%m-%d") as date, meal_type, items FROM menus WHERE date BETWEEN ? AND ? ORDER BY date, meal_type', [start, end]);
+        const [menus] = await pool.query('SELECT id, DATE_FORMAT(date, "%Y-%m-%d") as date, meal_type, items FROM menus ORDER BY date, meal_type');
         res.json(menus.map(m => ({ ...m, items: typeof m.items === 'string' ? JSON.parse(m.items) : m.items })));
     } catch (error) { res.status(500).json({ error: error.message }); }
 });

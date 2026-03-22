@@ -1,6 +1,6 @@
 import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 
-export function EditMenuModal({
+export default function EditMenuModal({
     visible,
     itemsText,
     setItemsText,
