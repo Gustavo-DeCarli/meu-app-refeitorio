@@ -5,8 +5,8 @@ import {
     TouchableOpacity, Text
 } from 'react-native';
 import { api } from '../../services/api';
-import MenuCard from '../../componentes/MenuCard'
-import EditMenuModal from '../../componentes/EditMenuModal';
+import MenuCard from '../../components/MenuCard'
+import EditMenuModal from '../../components/EditMenuModal';
 
 export default function Cardapio() {
     const router = useRouter();
@@ -18,10 +18,29 @@ export default function Cardapio() {
     const [editing, setEditing] = useState<any>(null);
     const [text, setText] = useState('');
 
+    // useEffect(() => {
+    //     api.get('/menus').then(res => setMenus(res.data));
+    //     api.get(`/favorites/${parsedUser.id}`).then(res => setFavorites(res.data));
+    // }, []);
+
     useEffect(() => {
-        api.get('/menus').then(res => setMenus(res.data));
+        const today = new Date();
+        const dayOfWeek = today.getDay() || 7;
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - dayOfWeek + 1);
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        const formatDate = (date) => date.toISOString().split('T')[0];
+
+        api.get('/menus', {
+            params: {
+                start: formatDate(startOfWeek),
+                end: formatDate(endOfWeek)
+            }
+        }).then(res => setMenus(res.data));
+
         api.get(`/favorites/${parsedUser.id}`).then(res => setFavorites(res.data));
-    }, []);
+    }, [parsedUser.id]);
 
     const toggleFavorite = async (id: number) => {
         if (favorites.includes(id)) {
@@ -57,10 +76,6 @@ export default function Cardapio() {
     };
 
     return (
-        <>
-
-
-
         <View style={styles.container}>
             <View style={styles.header}>
                 <View>
@@ -99,7 +114,6 @@ export default function Cardapio() {
                 onSave={save}
             />
         </View>
-        </>
     );
 }
 

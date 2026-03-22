@@ -1,6 +1,5 @@
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Menu } from '../types';
 
 export default function MenuCard({
     menu,
@@ -27,7 +26,7 @@ export default function MenuCard({
                             name={isFav ? "star" : "star-outline"}
                             size={22}
                             color={isFav ? "#eab308" : "#999"}
-                        />
+                            />
                     </TouchableOpacity>
 
                     <TouchableOpacity onPress={onShare}>
@@ -35,7 +34,7 @@ export default function MenuCard({
                     </TouchableOpacity>
                 </View>
             </View>
-
+            <Text style={styles.subtitle}>{menu.date}</Text>
             {menu.items.map((item: string, i: number) => (
                 <Text key={i}>• {item}</Text>
             ))}
@@ -53,10 +52,15 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 10
     },
     title: {
         fontWeight: 'bold',
         fontSize: 16
+    },
+    subtitle: {
+        color: '#a0a0a0',
+        fontSize: 12,
+        paddingBottom: 5
     }
+
 });
