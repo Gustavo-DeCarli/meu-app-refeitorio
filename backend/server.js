@@ -92,3 +92,22 @@ app.get('/api/favorites/:user_id', async (req, res) => {
 });
 
 app.listen(3000, () => console.log('API na porta 3000'));
+
+app.post('/api/menus', async (req, res) => {
+    try {
+        const { date, meal_type, items } = req.body;
+
+        if (!date || !meal_type || !items) {
+            return res.status(400).json({ error: 'Dados inválidos' });
+        }
+
+        await pool.query(
+            'INSERT INTO menus (date, meal_type, items) VALUES (?, ?, ?)',
+            [date, meal_type, JSON.stringify(items)]
+        );
+
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});

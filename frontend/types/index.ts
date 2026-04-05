@@ -16,4 +16,5 @@ export type RootStackParamList = {
     Login: undefined;
     Home: { user: User };
     Cardapio: { user: User };
+    CadastrarCardapio: { user: User };
 };

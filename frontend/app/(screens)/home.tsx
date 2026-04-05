@@ -39,6 +39,22 @@ export default function Home() {
                         Consulte os cardápios da semana
                     </Text>
                 </TouchableOpacity>
+                {parsedUser.type === 'servidor' && (
+                    <TouchableOpacity
+                        style={styles.card}
+                        onPress={() =>
+                            router.push({
+                                pathname: '/cadastrar-cardapio',
+                                params: { user }
+                            })
+                        }
+                    >
+                        <Text style={styles.cardTitle}>Cadastrar Cardápio</Text>
+                        <Text style={styles.cardDesc}>
+                            Criar novo cardápio
+                        </Text>
+                    </TouchableOpacity>
+                )}
             </View>
         </View>
     );
