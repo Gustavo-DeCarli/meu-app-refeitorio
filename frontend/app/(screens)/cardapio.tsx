@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { Redirect, useRouter } from 'expo-router';
 import {
-    ScrollView, View, StyleSheet, Share,
+    ScrollView, View, StyleSheet,
     TouchableOpacity, Text, Alert
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import { api } from '../../services/api';
 import MenuCard from '../../components/MenuCard';
 import EditMenuModal from '../../components/EditMenuModal';
@@ -67,10 +68,17 @@ export default function Cardapio() {
         }
     };
 
-    const handleShare = (menu: any) => {
-        Share.share({
-            message: menu.items.join('\n')
-        });
+    const handleCopy = async (menu: any) => {
+        const dateParts = menu.date.split('-');
+        const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+        
+        const textToCopy = `🍴 *Cardápio do Dia - ${formattedDate}*
+🍛 *${menu.meal_type}*
+
+${menu.items.map((item: string) => `• ${item}`).join('\n')}`;
+
+        await Clipboard.setStringAsync(textToCopy);
+        Alert.alert('Copiado!', 'Cardápio copiado para a área de transferência.');
     };
 
     const save = async () => {
@@ -107,7 +115,7 @@ export default function Cardapio() {
             isFav={favorites.includes(menu.id)}
             isServidor={user.type === 'servidor'}
             onToggleFavorite={() => toggleFavorite(menu.id)}
-            onShare={() => handleShare(menu)}
+            onCopy={() => handleCopy(menu)}
             onEdit={() => {
                 setEditing(menu);
                 setText(menu.items.join('\n'));

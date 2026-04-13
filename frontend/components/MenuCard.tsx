@@ -6,7 +6,7 @@ export default function MenuCard({
     isFav,
     isServidor,
     onToggleFavorite,
-    onShare,
+    onCopy,
     onEdit,
     onDelete
 }: any) {
@@ -35,8 +35,8 @@ export default function MenuCard({
                             />
                     </TouchableOpacity>
 
-                    <TouchableOpacity onPress={onShare} style={styles.iconButton}>
-                        <Ionicons name="share-social-outline" size={20} color="#4b5563" />
+                    <TouchableOpacity onPress={onCopy} style={styles.iconButton}>
+                        <Ionicons name="copy-outline" size={20} color="#4b5563" />
                     </TouchableOpacity>
                 </View>
             </View>
