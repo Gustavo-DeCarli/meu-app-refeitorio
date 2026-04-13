@@ -8,13 +8,15 @@ export default function LoginScreen() {
     const [login, setLogin] = useState('');
     const [senha, setSenha] = useState('');
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const { setUser } = useUser();
     const router = useRouter();
 
     const handleLogin = async () => {
+        setError('');
         if (!login || !senha) {
-            Alert.alert('Erro', 'Preencha todos os campos');
+            setError('Preencha todos os campos');
             return;
         }
 
@@ -27,13 +29,12 @@ export default function LoginScreen() {
 
             if (res.data?.success && res.data.user) {
                 setUser(res.data.user);
-                
                 router.replace('/home');
             } else {
-                Alert.alert('Erro', 'Usuário ou senha incorretos');
+                setError('Usuário ou senha incorretos');
             }
-        } catch (error) {
-            Alert.alert('Erro', 'Não foi possível conectar ao servidor');
+        } catch (err) {
+            setError('Credenciais inválidas');
         } finally {
             setLoading(false);
         }
@@ -71,6 +72,10 @@ export default function LoginScreen() {
                         <Text style={styles.buttonText}>Entrar</Text>
                     )}
                 </TouchableOpacity>
+
+                {error ? (
+                    <Text style={styles.errorText}>{error}</Text>
+                ) : null}
             </View>
         </View>
     );
@@ -120,5 +125,12 @@ const styles = StyleSheet.create({
         color: '#fff',
         fontWeight: 'bold',
         fontSize: 16
+    },
+    errorText: {
+        color: '#ef4444',
+        fontSize: 14,
+        textAlign: 'center',
+        marginTop: 15,
+        fontWeight: '500'
     }
 });

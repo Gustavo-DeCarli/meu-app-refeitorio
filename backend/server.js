@@ -101,11 +101,31 @@ app.post('/api/menus', async (req, res) => {
             return res.status(400).json({ error: 'Dados inválidos' });
         }
 
+        const [existing] = await pool.query(
+            'SELECT id FROM menus WHERE date = ? AND meal_type = ?',
+            [date, meal_type]
+        );
+
+        if (existing.length > 0) {
+            return res.status(409).json({ 
+                error: `Já existe um cardápio de ${meal_type} cadastrado para esta data.` 
+            });
+        }
+
         await pool.query(
             'INSERT INTO menus (date, meal_type, items) VALUES (?, ?, ?)',
             [date, meal_type, JSON.stringify(items)]
         );
 
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+app.delete('/api/menus/:id', async (req, res) => {
+    try {
+        await pool.query('DELETE FROM menus WHERE id = ?', [req.params.id]);
         res.json({ success: true });
     } catch (error) {
         res.status(500).json({ error: error.message });

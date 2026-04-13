@@ -8,7 +8,7 @@ export default function Home() {
     const { user, setUser } = useUser();
 
     if (!user) {
-        return <Redirect href="/login" />; 
+        return <Redirect href="/login" />;
     }
 
     const handleLogout = () => {
@@ -19,7 +19,7 @@ export default function Home() {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <View>
+                <View style={{ flex: 1 }}>
                     <Text style={styles.welcome}>Olá, {user?.name}</Text>
                     <Text style={styles.badge}>
                         Acesso: {user?.type.toUpperCase()}
@@ -68,7 +68,22 @@ const styles = StyleSheet.create({
         padding: 20,
         paddingTop: 40,
         flexDirection: 'row',
-        justifyContent: 'space-between'
+        alignItems: 'center'
+    },
+
+    backButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+
+    backText: {
+        color: '#fff',
+        fontSize: 24,
+        fontWeight: 'bold'
     },
 
     welcome: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
@@ -86,7 +101,8 @@ const styles = StyleSheet.create({
     card: {
         backgroundColor: '#fff',
         padding: 16,
-        borderRadius: 12
+        borderRadius: 12,
+        marginTop: 5
     },
 
     cardTitle: { fontWeight: 'bold', fontSize: 16 },

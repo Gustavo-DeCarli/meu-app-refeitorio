@@ -7,36 +7,42 @@ export default function MenuCard({
     isServidor,
     onToggleFavorite,
     onShare,
-    onEdit
+    onEdit,
+    onDelete
 }: any) {
     return (
         <View style={styles.card}>
             <View style={styles.header}>
                 <Text style={styles.title}>{menu.meal_type}</Text>
 
-                <View style={{ flexDirection: 'row' }}>
+                <View style={styles.actions}>
                     {isServidor && (
-                        <TouchableOpacity onPress={onEdit}>
-                            <Ionicons name="pencil" size={22} />
-                        </TouchableOpacity>
+                        <>
+                            <TouchableOpacity onPress={onEdit} style={styles.iconButton}>
+                                <Ionicons name="pencil" size={20} color="#4b5563" />
+                            </TouchableOpacity>
+                            <TouchableOpacity onPress={onDelete} style={styles.iconButton}>
+                                <Ionicons name="trash" size={20} color="#ef4444" />
+                            </TouchableOpacity>
+                        </>
                     )}
 
-                    <TouchableOpacity onPress={onToggleFavorite}>
+                    <TouchableOpacity onPress={onToggleFavorite} style={styles.iconButton}>
                         <Ionicons
                             name={isFav ? "star" : "star-outline"}
-                            size={22}
+                            size={20}
                             color={isFav ? "#eab308" : "#999"}
                             />
                     </TouchableOpacity>
 
-                    <TouchableOpacity onPress={onShare}>
-                        <Ionicons name="share-social-outline" size={22} />
+                    <TouchableOpacity onPress={onShare} style={styles.iconButton}>
+                        <Ionicons name="share-social-outline" size={20} color="#4b5563" />
                     </TouchableOpacity>
                 </View>
             </View>
             <Text style={styles.subtitle}>{menu.date}</Text>
             {menu.items.map((item: string, i: number) => (
-                <Text key={i}>• {item}</Text>
+                <Text key={i} style={styles.itemText}>• {item}</Text>
             ))}
         </View>
     );
@@ -52,15 +58,31 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8
+    },
+    actions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12
+    },
+    iconButton: {
+        padding: 4
     },
     title: {
         fontWeight: 'bold',
-        fontSize: 16
+        fontSize: 18,
+        color: '#1f2937',
+        flex: 1
     },
     subtitle: {
-        color: '#a0a0a0',
+        color: '#6b7280',
         fontSize: 12,
-        paddingBottom: 5
+        marginBottom: 10
+    },
+    itemText: {
+        fontSize: 15,
+        color: '#374151',
+        marginBottom: 4
     }
-
 });

@@ -1,19 +1,19 @@
 import { Redirect, useRouter } from 'expo-router';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { useState } from 'react';
-import { api } from '../(services)/api';
+import { api } from '../../services/api';
 import { useUser } from '../../contexts/UserContext';
 
 type MealType = 'Café da Manhã' | 'Almoço' | 'Jantar';
 
 export default function CadastrarCardapio() {
     const router = useRouter();
-    const { user } = useUser();
+    const { user, setUser } = useUser();
 
-        if (!user) {
-            return <Redirect href='/login'></Redirect>;
-        }
-    
+    if (!user) {
+        return <Redirect href='/login'></Redirect>;
+    }
+
     const [text, setText] = useState('');
     const [mealType, setMealType] = useState<MealType>('Almoço');
 
@@ -21,8 +21,15 @@ export default function CadastrarCardapio() {
     const [day, setDay] = useState(String(hoje.getDate()).padStart(2, '0'));
     const [month, setMonth] = useState(String(hoje.getMonth() + 1).padStart(2, '0'));
     const [year, setYear] = useState(String(hoje.getFullYear()));
+    const [error, setError] = useState('');
+
+    const handleLogout = () => {
+        setUser(null);
+        router.replace('/login');
+    };
 
     const salvar = async () => {
+        setError('');
         const d = day.padStart(2, '0');
         const m = month.padStart(2, '0');
         const y = year;
@@ -33,7 +40,7 @@ export default function CadastrarCardapio() {
         const mesNum = parseInt(m);
 
         if (diaNum <= 0 || diaNum > 31 || mesNum <= 0 || mesNum > 12 || y.length < 4) {
-            Alert.alert('Erro', 'Informe uma data válida (DD/MM/AAAA)');
+            setError('Informe uma data válida (DD/MM/AAAA)');
             return;
         }
 
@@ -43,7 +50,7 @@ export default function CadastrarCardapio() {
             .filter(i => i.length > 0);
 
         if (items.length === 0) {
-            Alert.alert('Erro', 'Informe pelo menos um item no cardápio');
+            setError('Informe pelo menos um item no cardápio');
             return;
         }
 
@@ -57,14 +64,30 @@ export default function CadastrarCardapio() {
             Alert.alert('Sucesso', 'Cardápio cadastrado com sucesso!');
             router.back();
         } catch (e: any) {
-            console.error('ERRO API:', e?.response?.data || e.message);
-            Alert.alert('Erro', 'Falha ao salvar. Verifique a conexão com o servidor.');
+            const msg = e?.response?.data?.error || 'Falha ao salvar. Verifique a conexão com o servidor.';
+            setError(msg);
         }
     };
-
     return (
-        <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 40 }}>
-            <Text style={styles.title}>Novo Cardápio</Text>
+        <View style={styles.container}>
+            <View style={styles.header}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                    <Text style={styles.backText}>←</Text>
+                </TouchableOpacity>
+
+                <View style={{ flex: 1, marginLeft: 15 }}>
+                    <Text style={styles.welcome}>Olá, {user?.name}</Text>
+                    <Text style={styles.badge}>
+                        Acesso: {user?.type.toUpperCase()}
+                    </Text>
+                </View>
+
+                <TouchableOpacity onPress={handleLogout}>
+                    <Text style={styles.logout}>Sair</Text>
+                </TouchableOpacity>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.scrollContent}>
 
             <Text style={styles.label}>Data da Refeição:</Text>
             <View style={styles.dateContainer}>
@@ -139,15 +162,47 @@ export default function CadastrarCardapio() {
                 style={styles.input}
             />
 
+            {error ? (
+                <Text style={styles.errorText}>{error}</Text>
+            ) : null}
+
             <TouchableOpacity style={styles.button} onPress={salvar}>
                 <Text style={styles.buttonText}>Salvar Cardápio</Text>
             </TouchableOpacity>
-        </ScrollView>
+            </ScrollView>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+    container: { flex: 1, backgroundColor: '#f3f4f6' },
+    header: {
+        backgroundColor: '#15803d',
+        padding: 20,
+        paddingTop: 40,
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
+    backButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    backText: {
+        color: '#fff',
+        fontSize: 24,
+        fontWeight: 'bold'
+    },
+    welcome: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
+    badge: { color: '#dcfce7', fontSize: 12, marginTop: 4 },
+    logout: { color: '#fff', fontWeight: 'bold' },
+    scrollContent: {
+        padding: 20,
+        paddingBottom: 40
+    },
     title: { 
         fontSize: 24, 
         fontWeight: 'bold', 
@@ -184,7 +239,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         width: 55,
         fontSize: 16,
-        backgroundColor: '#f9fafb'
+        backgroundColor: '#fff'
     },
     dateSeparator: { 
         fontSize: 20, 
@@ -203,7 +258,7 @@ const styles = StyleSheet.create({
         borderColor: '#d1d5db',
         borderRadius: 8,
         alignItems: 'center',
-        backgroundColor: '#f9fafb'
+        backgroundColor: '#fff'
     },
     typeButtonActive: { 
         backgroundColor: '#15803d', 
@@ -223,7 +278,7 @@ const styles = StyleSheet.create({
         textAlignVertical: 'top',
         marginBottom: 30,
         fontSize: 16,
-        backgroundColor: '#f9fafb'
+        backgroundColor: '#fff'
     },
     button: { 
         backgroundColor: '#15803d', 
@@ -240,5 +295,12 @@ const styles = StyleSheet.create({
         color: '#fff', 
         fontWeight: 'bold', 
         fontSize: 16 
+    },
+    errorText: {
+        color: '#ef4444',
+        fontSize: 14,
+        textAlign: 'center',
+        marginBottom: 20,
+        fontWeight: '500'
     }
 });

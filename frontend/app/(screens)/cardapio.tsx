@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Redirect, useRouter } from 'expo-router';
 import {
     ScrollView, View, StyleSheet, Share,
-    TouchableOpacity, Text
+    TouchableOpacity, Text, Alert
 } from 'react-native';
 import { api } from '../../services/api';
 import MenuCard from '../../components/MenuCard';
@@ -86,6 +86,15 @@ export default function Cardapio() {
         setEditing(null);
     };
 
+    const handleDelete = async (id: number) => {
+        try {
+            await api.delete(`/menus/${id}`);
+            setMenus(prev => prev.filter(m => m.id !== id));
+        } catch (error) {
+            console.error('Erro ao excluir cardápio:', error);
+        }
+    };
+
     const handleLogout = () => {
         setUser(null);
         router.replace('/login');
@@ -103,13 +112,18 @@ export default function Cardapio() {
                 setEditing(menu);
                 setText(menu.items.join('\n'));
             }}
+            onDelete={() => handleDelete(menu.id)}
         />
     );
 
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <View>
+                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                    <Text style={styles.backText}>←</Text>
+                </TouchableOpacity>
+
+                <View style={{ flex: 1, marginLeft: 15 }}>
                     <Text style={styles.welcome}>Olá, {user.name}</Text>
                     <Text style={styles.badge}>
                         Acesso: {user.type.toUpperCase()}
@@ -179,9 +193,22 @@ const styles = StyleSheet.create({
     header: {
         backgroundColor: '#15803d',
         padding: 20,
+        paddingTop: 40,
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center'
+    },
+    backButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.2)',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    backText: {
+        color: '#fff',
+        fontSize: 24,
+        fontWeight: 'bold'
     },
     
     favoritesSection: {
