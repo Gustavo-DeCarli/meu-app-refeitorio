@@ -1,12 +1,18 @@
-import { useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { api } from '../(services)/api';
+import { useUser } from '../../contexts/UserContext';
 
 type MealType = 'Café da Manhã' | 'Almoço' | 'Jantar';
 
 export default function CadastrarCardapio() {
     const router = useRouter();
+    const { user } = useUser();
+
+        if (!user) {
+            return <Redirect href='/login'></Redirect>;
+        }
     
     const [text, setText] = useState('');
     const [mealType, setMealType] = useState<MealType>('Almoço');

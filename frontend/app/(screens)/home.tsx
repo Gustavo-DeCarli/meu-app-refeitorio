@@ -1,23 +1,32 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useUser } from '../../contexts/UserContext';
+import { useEffect } from 'react';
 
 export default function Home() {
     const router = useRouter();
-    const { user } = useLocalSearchParams();
+    const { user, setUser } = useUser();
 
-    const parsedUser = JSON.parse(user as string);
+    if (!user) {
+        return <Redirect href="/login" />; 
+    }
+
+    const handleLogout = () => {
+        setUser(null);
+        router.replace('/login');
+    };
 
     return (
         <View style={styles.container}>
             <View style={styles.header}>
                 <View>
-                    <Text style={styles.welcome}>Olá, {parsedUser.name}</Text>
+                    <Text style={styles.welcome}>Olá, {user?.name}</Text>
                     <Text style={styles.badge}>
-                        Acesso: {parsedUser.type.toUpperCase()}
+                        Acesso: {user?.type.toUpperCase()}
                     </Text>
                 </View>
 
-                <TouchableOpacity onPress={() => router.replace('/')}>
+                <TouchableOpacity onPress={handleLogout}>
                     <Text style={styles.logout}>Sair</Text>
                 </TouchableOpacity>
             </View>
@@ -27,27 +36,18 @@ export default function Home() {
 
                 <TouchableOpacity
                     style={styles.card}
-                    onPress={() =>
-                        router.push({
-                            pathname: '/cardapio',
-                            params: { user }
-                        })
-                    }
+                    onPress={() => router.push('/cardapio')}
                 >
                     <Text style={styles.cardTitle}>Cardápio</Text>
                     <Text style={styles.cardDesc}>
                         Consulte os cardápios da semana
                     </Text>
                 </TouchableOpacity>
-                {parsedUser.type === 'servidor' && (
+
+                {user?.type === 'servidor' && (
                     <TouchableOpacity
                         style={styles.card}
-                        onPress={() =>
-                            router.push({
-                                pathname: '/cadastrar-cardapio',
-                                params: { user }
-                            })
-                        }
+                        onPress={() => router.push('/cadastrar-cardapio')}
                     >
                         <Text style={styles.cardTitle}>Cadastrar Cardápio</Text>
                         <Text style={styles.cardDesc}>

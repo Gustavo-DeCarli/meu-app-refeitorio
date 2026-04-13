@@ -1,30 +1,34 @@
 import { useEffect, useState } from 'react';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Redirect, useRouter } from 'expo-router';
 import {
     ScrollView, View, StyleSheet, Share,
     TouchableOpacity, Text
 } from 'react-native';
 import { api } from '../../services/api';
-import MenuCard from '../../components/MenuCard'
+import MenuCard from '../../components/MenuCard';
 import EditMenuModal from '../../components/EditMenuModal';
+import { useUser } from '../../contexts/UserContext';
 
 export default function Cardapio() {
     const router = useRouter();
-    const { user } = useLocalSearchParams();
-    const parsedUser = JSON.parse(user as string);
+    const { user, setUser } = useUser();
 
     const [menus, setMenus] = useState<any[]>([]);
     const [favorites, setFavorites] = useState<number[]>([]);
     const [editing, setEditing] = useState<any>(null);
     const [text, setText] = useState('');
 
+    if (!user) {
+        return null;
+    }
+
     const today = new Date();
     const todayStr = today.toISOString().split('T')[0];
-    
+
     const dayOfWeek = today.getDay() || 7;
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - dayOfWeek + 1);
-    
+
     const weekDates = Array.from({ length: 7 }).map((_, i) => {
         const d = new Date(startOfWeek);
         d.setDate(startOfWeek.getDate() + i);
@@ -47,16 +51,16 @@ export default function Cardapio() {
             }
         }).then(res => setMenus(res.data));
 
-        api.get(`/favorites/${parsedUser.id}`).then(res => setFavorites(res.data));
-    }, [parsedUser.id]);
+        api.get(`/favorites/${user.id}`).then(res => setFavorites(res.data));
+    }, [user.id]);
 
     const toggleFavorite = async (id: number) => {
         if (favorites.includes(id)) {
-            await api.delete(`/favorites/${parsedUser.id}/${id}`);
+            await api.delete(`/favorites/${user.id}/${id}`);
             setFavorites(favorites.filter(f => f !== id));
         } else {
             await api.post('/favorites', {
-                user_id: parsedUser.id,
+                user_id: user.id,
                 menu_id: id
             });
             setFavorites([...favorites, id]);
@@ -72,19 +76,27 @@ export default function Cardapio() {
     const save = async () => {
         if (!editing) return;
         const items = text.split('\n');
+
         await api.put(`/menus/${editing.id}`, { items });
+
         setMenus(prev =>
             prev.map(m => m.id === editing.id ? { ...m, items } : m)
         );
+
         setEditing(null);
     };
 
-    const renderMenuCard = (menu: any, dateStr: string, isHighlighted = false) => (
+    const handleLogout = () => {
+        setUser(null);
+        router.replace('/login');
+    };
+
+    const renderMenuCard = (menu: any, dateStr: string) => (
         <MenuCard
             key={`menu-${menu.id}-${dateStr}`}
             menu={menu}
             isFav={favorites.includes(menu.id)}
-            isServidor={parsedUser.type === 'servidor'}
+            isServidor={user.type === 'servidor'}
             onToggleFavorite={() => toggleFavorite(menu.id)}
             onShare={() => handleShare(menu)}
             onEdit={() => {
@@ -98,13 +110,13 @@ export default function Cardapio() {
         <View style={styles.container}>
             <View style={styles.header}>
                 <View>
-                    <Text style={styles.welcome}>Olá, {parsedUser.name}</Text>
+                    <Text style={styles.welcome}>Olá, {user.name}</Text>
                     <Text style={styles.badge}>
-                        Acesso: {parsedUser.type.toUpperCase()}
+                        Acesso: {user.type.toUpperCase()}
                     </Text>
                 </View>
 
-                <TouchableOpacity onPress={() => router.replace('/')}>
+                <TouchableOpacity onPress={handleLogout}>
                     <Text style={styles.logout}>Sair</Text>
                 </TouchableOpacity>
             </View>
@@ -113,7 +125,7 @@ export default function Cardapio() {
                 {favoriteMenus.length > 0 && (
                     <View style={styles.favoritesSection}>
                         <Text style={styles.favoritesTitle}>⭐ Seus Favoritos em Destaque</Text>
-                        {favoriteMenus.map(menu => renderMenuCard(menu, menu.date, true))}
+                        {favoriteMenus.map(menu => renderMenuCard(menu, menu.date))}
                     </View>
                 )}
 
@@ -123,21 +135,27 @@ export default function Cardapio() {
                     const dayMenus = menus.filter(m => m.date === dateStr);
 
                     return (
-                        <View key={index} style={[styles.dayContainer, isToday && styles.dayContainerToday]}>
+                        <View
+                            key={index}
+                            style={[styles.dayContainer, isToday && styles.dayContainerToday]}
+                        >
                             <View style={[styles.dayHeader, isToday && styles.dayHeaderToday]}>
                                 <Text style={[styles.dayTitle, isToday && styles.textWhite]}>
                                     {diasSemana[index]} {isToday ? '(Hoje)' : ''}
                                 </Text>
                             </View>
-                            
+
                             {dayMenus.length > 0 ? (
                                 dayMenus.map(menu => renderMenuCard(menu, dateStr))
                             ) : (
-                                <Text style={styles.noMenuText}>Sem cardápio para este dia.</Text>
+                                <Text style={styles.noMenuText}>
+                                    Sem cardápio para este dia.
+                                </Text>
                             )}
                         </View>
                     );
                 })}
+
                 <View style={{ height: 40 }} />
             </ScrollView>
 
