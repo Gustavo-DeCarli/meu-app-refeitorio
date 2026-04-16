@@ -1,275 +1,277 @@
-import { useEffect, useState } from 'react';
-import { Redirect, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react'
+import { useRouter } from 'expo-router'
 import {
-    ScrollView, View, StyleSheet,
-    TouchableOpacity, Text, Alert
-} from 'react-native';
-import * as Clipboard from 'expo-clipboard';
-import { api } from '../../services/api';
-import MenuCard from '../../components/MenuCard';
-import EditMenuModal from '../../components/EditMenuModal';
-import { useUser } from '../../contexts/UserContext';
+    ScrollView,
+    View,
+    StyleSheet,
+    TouchableOpacity,
+    Text,
+    Alert
+} from 'react-native'
+import * as Clipboard from 'expo-clipboard'
+import { api } from '../../services/api'
+import MenuCard from '../../components/MenuCard'
+import EditMenuModal from '../../components/EditMenuModal'
+import { useUser } from '../../contexts/UserContext'
 
 export default function Cardapio() {
-    const router = useRouter();
-    const { user, setUser } = useUser();
+    const router = useRouter()
+    const { user, setUser } = useUser()
 
-    const [menus, setMenus] = useState<any[]>([]);
-    const [favorites, setFavorites] = useState<number[]>([]);
-    const [editing, setEditing] = useState<any>(null);
-    const [text, setText] = useState('');
+    const [menus, setMenus] = useState<any[]>([])
+    const [favorites, setFavorites] = useState<number[]>([])
+    const [isEditing, setIsEditing] = useState<any>(null)
+    const [menuText, setMenuText] = useState('')
 
-    if (!user) {
-        return null;
-    }
+    if (!user) return null
 
-    const today = new Date();
-    const todayStr = today.toISOString().split('T')[0];
+    const today = new Date()
+    const todayStr = today.toISOString().split('T')[0]
 
-    const dayOfWeek = today.getDay() || 7;
-    const startOfWeek = new Date(today);
-    startOfWeek.setDate(today.getDate() - dayOfWeek + 1);
+    const dayOfWeek = today.getDay() || 7
+    const startOfWeek = new Date(today)
+    startOfWeek.setDate(today.getDate() - dayOfWeek + 1)
 
     const weekDates = Array.from({ length: 7 }).map((_, i) => {
-        const d = new Date(startOfWeek);
-        d.setDate(startOfWeek.getDate() + i);
-        return d.toISOString().split('T')[0];
-    });
+        const d = new Date(startOfWeek)
+        d.setDate(startOfWeek.getDate() + i)
+        return d.toISOString().split('T')[0]
+    })
 
-    const diasSemana = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+    const labelsDias = [
+        'Segunda',
+        'Terça',
+        'Quarta',
+        'Quinta',
+        'Sexta',
+        'Sábado',
+        'Domingo'
+    ]
 
-    const favoriteMenus = menus.filter(m => favorites.includes(m.id));
+    const favoriteList = menus.filter(m => favorites.includes(m.id))
+
+    const fetchItems = async () => {
+        try {
+            const endOfWeek = new Date(startOfWeek)
+            endOfWeek.setDate(startOfWeek.getDate() + 6)
+            const formatDate = (date: Date) => date.toISOString().split('T')[0]
+
+            const [menusRes, favsRes] = await Promise.all([
+                api.get('/menus', {
+                    params: {
+                        start: formatDate(startOfWeek),
+                        end: formatDate(endOfWeek)
+                    }
+                }),
+                api.get(`/favorites/${user.id}`)
+            ])
+
+            setMenus(menusRes.data)
+            setFavorites(favsRes.data)
+        } catch (err) {
+            console.error("Erro ao carregar dados", err)
+        }
+    }
 
     useEffect(() => {
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        const formatDate = (date: Date) => date.toISOString().split('T')[0];
+        fetchItems()
+    }, [user.id])
 
-        api.get('/menus', {
-            params: {
-                start: formatDate(startOfWeek),
-                end: formatDate(endOfWeek)
-            }
-        }).then(res => setMenus(res.data));
-
-        api.get(`/favorites/${user.id}`).then(res => setFavorites(res.data));
-    }, [user.id]);
-
-    const toggleFavorite = async (id: number) => {
-        if (favorites.includes(id)) {
-            await api.delete(`/favorites/${user.id}/${id}`);
-            setFavorites(favorites.filter(f => f !== id));
-        } else {
-            await api.post('/favorites', {
-                user_id: user.id,
-                menu_id: id
-            });
-            setFavorites([...favorites, id]);
-        }
-    };
-
-    const handleCopy = async (menu: any) => {
-        const dateParts = menu.date.split('-');
-        const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
-        
-        const textToCopy = `🍴 *Cardápio do Dia - ${formattedDate}*
-🍛 *${menu.meal_type}*
-
-${menu.items.map((item: string) => `• ${item}`).join('\n')}`;
-
-        await Clipboard.setStringAsync(textToCopy);
-        Alert.alert('Copiado!', 'Cardápio copiado para a área de transferência.');
-    };
-
-    const save = async () => {
-        if (!editing) return;
-        const items = text.split('\n');
-
-        await api.put(`/menus/${editing.id}`, { items });
-
-        setMenus(prev =>
-            prev.map(m => m.id === editing.id ? { ...m, items } : m)
-        );
-
-        setEditing(null);
-    };
-
-    const handleDelete = async (id: number) => {
+    const handleToggleFavorite = async (id: number) => {
         try {
-            await api.delete(`/menus/${id}`);
-            setMenus(prev => prev.filter(m => m.id !== id));
+            if (favorites.includes(id)) {
+                await api.delete(`/favorites/${user.id}/${id}`)
+                setFavorites(prev => prev.filter(f => f !== id))
+            } else {
+                await api.post('/favorites', {
+                    user_id: user.id,
+                    menu_id: id
+                })
+                setFavorites(prev => [...prev, id])
+            }
         } catch (error) {
-            console.error('Erro ao excluir cardápio:', error);
+            Alert.alert("Erro", "Nao foi possivel atualizar favoritos")
         }
-    };
+    }
 
-    const handleLogout = () => {
-        setUser(null);
-        router.replace('/login');
-    };
+    const onCopyAction = async (menu: any) => {
+        const [y, m, d] = menu.date.split('-')
+        const dateFormatted = `${d}/${m}/${y}`
 
-    const renderMenuCard = (menu: any, dateStr: string) => (
-        <MenuCard
-            key={`menu-${menu.id}-${dateStr}`}
-            menu={menu}
-            isFav={favorites.includes(menu.id)}
-            isServidor={user.type === 'servidor'}
-            onToggleFavorite={() => toggleFavorite(menu.id)}
-            onCopy={() => handleCopy(menu)}
-            onEdit={() => {
-                setEditing(menu);
-                setText(menu.items.join('\n'));
-            }}
-            onDelete={() => handleDelete(menu.id)}
-        />
-    );
+        const content = `Cardapio do Dia - ${dateFormatted}\n\n${menu.meal_type}\n${menu.items.map((i: string) => `- ${i}`).join('\n')}`
+
+        await Clipboard.setStringAsync(content)
+        Alert.alert('Sucesso', 'Copiado para o clipboard')
+    }
+
+    const onSaveUpdate = async () => {
+        if (!isEditing) return
+        const items = menuText.split('\n').filter(i => i.trim() !== '')
+
+        try {
+            await api.put(`/menus/${isEditing.id}`, { items })
+            setMenus(prev => prev.map(m => (m.id === isEditing.id ? { ...m, items } : m)))
+            setIsEditing(null)
+        } catch (e) {
+            Alert.alert("Erro", "Falha ao salvar alteracoes")
+        }
+    }
+
+    const removeMenu = async (id: number) => {
+        try {
+            await api.delete(`/menus/${id}`)
+            setMenus(prev => prev.filter(m => m.id !== id))
+        } catch (error) {
+            console.log('Erro delete:', error)
+        }
+    }
+
+    const logout = () => {
+        setUser(null)
+        router.replace('/login')
+    }
 
     return (
-        <View style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <Text style={styles.backText}>←</Text>
+        <View style={styles.mainContainer}>
+            <View style={styles.navBar}>
+                <TouchableOpacity onPress={() => router.back()} style={styles.btnBack}>
+                    <Text style={styles.btnText}>←</Text>
                 </TouchableOpacity>
 
                 <View style={{ flex: 1, marginLeft: 15 }}>
-                    <Text style={styles.welcome}>Olá, {user.name}</Text>
-                    <Text style={styles.badge}>
-                        Acesso: {user.type.toUpperCase()}
-                    </Text>
+                    <Text style={styles.userName}>Ola, {user.name}</Text>
+                    <Text style={styles.roleTag}>Role: {user.type.toUpperCase()}</Text>
                 </View>
 
-                <TouchableOpacity onPress={handleLogout}>
-                    <Text style={styles.logout}>Sair</Text>
+                <TouchableOpacity onPress={logout}>
+                    <Text style={styles.logoutText}>Sair</Text>
                 </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.content}>
-                {favoriteMenus.length > 0 && (
-                    <View style={styles.favoritesSection}>
-                        <Text style={styles.favoritesTitle}>⭐ Seus Favoritos em Destaque</Text>
-                        {favoriteMenus.map(menu => renderMenuCard(menu, menu.date))}
+            <ScrollView contentContainerStyle={styles.scrollPadding}>
+                {favoriteList.length > 0 && (
+                    <View style={styles.favBox}>
+                        <Text style={styles.favLabel}>Favoritos em Destaque</Text>
+                        {favoriteList.map(menu => (
+                            <MenuCard
+                                key={`fav-${menu.id}`}
+                                menu={menu}
+                                isFav={true}
+                                isServidor={user.type === 'servidor'}
+                                onToggleFavorite={() => handleToggleFavorite(menu.id)}
+                                onCopy={() => onCopyAction(menu)}
+                                onEdit={() => {
+                                    setIsEditing(menu)
+                                    setMenuText(menu.items.join('\n'))
+                                }}
+                                onDelete={() => removeMenu(menu.id)}
+                            />
+                        ))}
                     </View>
                 )}
 
-                <Text style={styles.sectionTitle}>Semana Atual</Text>
-                {weekDates.map((dateStr, index) => {
-                    const isToday = dateStr === todayStr;
-                    const dayMenus = menus.filter(m => m.date === dateStr);
+                <Text style={styles.listTitle}>Cardapio da Semana</Text>
+                
+                {weekDates.map((dateStr, idx) => {
+                    const isToday = dateStr === todayStr
+                    const filteredMenus = menus.filter(m => m.date === dateStr)
 
                     return (
-                        <View
-                            key={index}
-                            style={[styles.dayContainer, isToday && styles.dayContainerToday]}
-                        >
-                            <View style={[styles.dayHeader, isToday && styles.dayHeaderToday]}>
-                                <Text style={[styles.dayTitle, isToday && styles.textWhite]}>
-                                    {diasSemana[index]} {isToday ? '(Hoje)' : ''}
+                        <View key={dateStr} style={[styles.dayRow, isToday && styles.rowToday]}>
+                            <View style={[styles.dayHeader, isToday && styles.headerToday]}>
+                                <Text style={[styles.dayName, isToday && { color: '#fff' }]}>
+                                    {labelsDias[idx]} {isToday ? '(Hoje)' : ''}
                                 </Text>
                             </View>
 
-                            {dayMenus.length > 0 ? (
-                                dayMenus.map(menu => renderMenuCard(menu, dateStr))
+                            {filteredMenus.length > 0 ? (
+                                filteredMenus.map(m => (
+                                    <MenuCard
+                                        key={m.id}
+                                        menu={m}
+                                        isFav={favorites.includes(m.id)}
+                                        isServidor={user.type === 'servidor'}
+                                        onToggleFavorite={() => handleToggleFavorite(m.id)}
+                                        onCopy={() => onCopyAction(m)}
+                                        onEdit={() => {
+                                            setIsEditing(m)
+                                            setMenuText(m.items.join('\n'))
+                                        }}
+                                        onDelete={() => removeMenu(m.id)}
+                                    />
+                                ))
                             ) : (
-                                <Text style={styles.noMenuText}>
-                                    Sem cardápio para este dia.
-                                </Text>
+                                <Text style={styles.emptyText}>Sem registros para hoje.</Text>
                             )}
                         </View>
-                    );
+                    )
                 })}
-
-                <View style={{ height: 40 }} />
             </ScrollView>
 
             <EditMenuModal
-                visible={!!editing}
-                itemsText={text}
-                setItemsText={setText}
-                onClose={() => setEditing(null)}
-                onSave={save}
+                visible={!!isEditing}
+                itemsText={menuText}
+                setItemsText={setMenuText}
+                onClose={() => setIsEditing(null)}
+                onSave={onSaveUpdate}
             />
         </View>
-    );
+    )
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#f3f4f6' },
-    content: { padding: 16 },
-    welcome: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-    badge: { color: '#dcfce7', fontSize: 12, marginTop: 4 },
-    logout: { color: '#fff', fontWeight: 'bold' },
-    header: {
+    mainContainer: { flex: 1, backgroundColor: '#f3f4f6' },
+    scrollPadding: { padding: 16, paddingBottom: 40 },
+    userName: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
+    roleTag: { color: '#dcfce7', fontSize: 11, marginTop: 2 },
+    logoutText: { color: '#fff', fontWeight: '600' },
+    navBar: {
         backgroundColor: '#15803d',
-        padding: 20,
-        paddingTop: 40,
+        paddingHorizontal: 20,
+        paddingBottom: 20,
+        paddingTop: 50,
         flexDirection: 'row',
         alignItems: 'center'
     },
-    backButton: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: 'rgba(255,255,255,0.2)',
+    btnBack: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: 'rgba(255,255,255,0.15)',
         justifyContent: 'center',
         alignItems: 'center'
     },
-    backText: {
-        color: '#fff',
-        fontSize: 24,
-        fontWeight: 'bold'
-    },
-    
-    favoritesSection: {
-        marginBottom: 24,
-        backgroundColor: '#fef08a',
+    btnText: { color: '#fff', fontSize: 20 },
+    favBox: {
+        marginBottom: 25,
+        backgroundColor: '#fef9c3',
         padding: 12,
-        borderRadius: 8,
-    },
-    favoritesTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        color: '#854d0e',
-        marginBottom: 8,
-    },
-    sectionTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#374151',
-        marginBottom: 16,
-    },
-    dayContainer: {
-        marginBottom: 16,
-        backgroundColor: '#fff',
-        borderRadius: 8,
-        overflow: 'hidden',
+        borderRadius: 10,
         borderWidth: 1,
-        borderColor: '#e5e7eb'
+        borderColor: '#fde047'
     },
-    dayContainerToday: {
-        borderColor: '#15803d',
-        borderWidth: 2,
+    favLabel: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#713f12',
+        marginBottom: 10
     },
-    dayHeader: {
-        backgroundColor: '#f9fafb',
-        padding: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#e5e7eb'
-    },
-    dayHeaderToday: {
-        backgroundColor: '#15803d',
-    },
-    dayTitle: {
+    listTitle: {
+        fontSize: 17,
         fontWeight: 'bold',
-        color: '#4b5563',
-        fontSize: 16,
+        color: '#1f2937',
+        marginBottom: 15
     },
-    textWhite: {
-        color: '#ffffff',
+    dayRow: {
+        marginBottom: 15,
+        backgroundColor: '#fff',
+        borderRadius: 10,
+        overflow: 'hidden',
+        elevation: 2
     },
-    noMenuText: {
-        padding: 16,
-        color: '#9ca3af',
-        fontStyle: 'italic',
-        textAlign: 'center'
-    }
-});
+    rowToday: { borderColor: '#15803d', borderWidth: 1.5 },
+    dayHeader: { backgroundColor: '#f3f4f6', padding: 10 },
+    headerToday: { backgroundColor: '#15803d' },
+    dayName: { fontWeight: '600', color: '#374151' },
+    emptyText: { padding: 15, color: '#9ca3af', textAlign: 'center', fontSize: 13 }
+})
