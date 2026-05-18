@@ -6,7 +6,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Configuração do MySQL
 const dbConfig = {
     host: 'localhost',
     user: 'root',
@@ -16,7 +15,6 @@ const dbConfig = {
 
 let pool = mysql.createPool(dbConfig);
 
-// Função para gerar dados de teste na primeira vez
 async function autoSeedCurrentWeek() {
     const [rows] = await pool.query('SELECT COUNT(*) as count FROM menus');
     if (rows[0].count === 0) {
@@ -41,8 +39,6 @@ async function autoSeedCurrentWeek() {
 }
 autoSeedCurrentWeek();
 
-// ======================= ROTAS =======================
-
 app.post('/api/login', async (req, res) => {
     try {
         const { login, password } = req.body;
@@ -60,11 +56,9 @@ app.get('/api/menus', async (req, res) => {
     } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// NOVA ROTA: Atualizar Cardápio (Apenas itens por agora)
 app.put('/api/menus/:id', async (req, res) => {
     try {
         const { items } = req.body;
-        // Transforma o array de volta em JSON para o MySQL
         await pool.query('UPDATE menus SET items = ? WHERE id = ?', [JSON.stringify(items), req.params.id]);
         res.json({ success: true });
     } catch (error) { res.status(500).json({ error: error.message }); }
