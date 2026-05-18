@@ -1,5 +1,5 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 
 export default function MenuCard({
     menu,
@@ -8,7 +8,7 @@ export default function MenuCard({
     onToggleFavorite,
     onCopy,
     onEdit,
-    onDelete
+    onDelete,
 }: any) {
     return (
         <View style={styles.card}>
@@ -18,31 +18,57 @@ export default function MenuCard({
                 <View style={styles.actions}>
                     {isServidor && (
                         <>
-                            <TouchableOpacity onPress={onEdit} style={styles.iconButton}>
-                                <Ionicons name="pencil" size={20} color="#4b5563" />
+                            <TouchableOpacity
+                                onPress={onEdit}
+                                style={styles.iconButton}
+                            >
+                                <Ionicons
+                                    name="pencil"
+                                    size={20}
+                                    color="#4b5563"
+                                />
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={onDelete} style={styles.iconButton}>
-                                <Ionicons name="trash" size={20} color="#ef4444" />
+                            <TouchableOpacity
+                                onPress={onDelete}
+                                style={styles.iconButton}
+                            >
+                                <Ionicons
+                                    name="trash"
+                                    size={20}
+                                    color="#ef4444"
+                                />
                             </TouchableOpacity>
                         </>
                     )}
 
-                    <TouchableOpacity onPress={onToggleFavorite} style={styles.iconButton}>
+                    <TouchableOpacity
+                        onPress={onToggleFavorite}
+                        style={styles.iconButton}
+                    >
                         <Ionicons
                             name={isFav ? "star" : "star-outline"}
                             size={20}
                             color={isFav ? "#eab308" : "#999"}
-                            />
+                        />
                     </TouchableOpacity>
 
-                    <TouchableOpacity onPress={onCopy} style={styles.iconButton}>
-                        <Ionicons name="copy-outline" size={20} color="#4b5563" />
+                    <TouchableOpacity
+                        onPress={onCopy}
+                        style={styles.iconButton}
+                    >
+                        <Ionicons
+                            name="copy-outline"
+                            size={20}
+                            color="#4b5563"
+                        />
                     </TouchableOpacity>
                 </View>
             </View>
             <Text style={styles.subtitle}>{menu.date}</Text>
             {menu.items.map((item: string, i: number) => (
-                <Text key={i} style={styles.itemText}>• {item}</Text>
+                <Text key={i} style={styles.itemText}>
+                    • {item}
+                </Text>
             ))}
         </View>
     );
@@ -50,39 +76,39 @@ export default function MenuCard({
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: '#fff',
+        backgroundColor: "#fff",
         padding: 16,
         marginBottom: 12,
-        borderRadius: 10
+        borderRadius: 10,
     },
     header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 8
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        marginBottom: 8,
     },
     actions: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 12,
     },
     iconButton: {
-        padding: 4
+        padding: 4,
     },
     title: {
-        fontWeight: 'bold',
+        fontWeight: "bold",
         fontSize: 18,
-        color: '#1f2937',
-        flex: 1
+        color: "#1f2937",
+        flex: 1,
     },
     subtitle: {
-        color: '#6b7280',
+        color: "#6b7280",
         fontSize: 12,
-        marginBottom: 10
+        marginBottom: 10,
     },
     itemText: {
         fontSize: 15,
-        color: '#374151',
-        marginBottom: 4
-    }
+        color: "#374151",
+        marginBottom: 4,
+    },
 });

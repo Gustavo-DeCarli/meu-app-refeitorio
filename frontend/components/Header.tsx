@@ -1,8 +1,14 @@
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { User } from '../types';
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { User } from "../types";
 
-export default function Header({ user, onLogout }: { user: User; onLogout: () => void }) {
+export default function Header({
+    user,
+    onLogout,
+}: {
+    user: User;
+    onLogout: () => void;
+}) {
     return (
         <View style={styles.header}>
             <View>
@@ -19,12 +25,12 @@ export default function Header({ user, onLogout }: { user: User; onLogout: () =>
 
 const styles = StyleSheet.create({
     header: {
-        backgroundColor: '#15803d',
+        backgroundColor: "#15803d",
         padding: 20,
         paddingTop: 60,
-        flexDirection: 'row',
-        justifyContent: 'space-between'
+        flexDirection: "row",
+        justifyContent: "space-between",
     },
-    title: { color: '#fff', fontSize: 20, fontWeight: 'bold' },
-    badge: { color: '#dcfce7', fontSize: 12 }
+    title: { color: "#fff", fontSize: 20, fontWeight: "bold" },
+    badge: { color: "#dcfce7", fontSize: 12 },
 });
