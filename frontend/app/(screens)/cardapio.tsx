@@ -72,8 +72,8 @@ export default function Cardapio() {
         const dateParts = menu.date.split('-');
         const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
         
-        const textToCopy = `🍴 *Cardápio do Dia - ${formattedDate}*
-🍛 *${menu.meal_type}*
+        const textToCopy = `*Cardápio do Dia - ${formattedDate}*
+*${menu.meal_type}*
 
 ${menu.items.map((item: string) => `• ${item}`).join('\n')}`;
 
@@ -146,7 +146,7 @@ ${menu.items.map((item: string) => `• ${item}`).join('\n')}`;
             <ScrollView style={styles.content}>
                 {favoriteMenus.length > 0 && (
                     <View style={styles.favoritesSection}>
-                        <Text style={styles.favoritesTitle}>⭐ Seus Favoritos em Destaque</Text>
+                        <Text style={styles.favoritesTitle}>Seus Favoritos em Destaque</Text>
                         {favoriteMenus.map(menu => renderMenuCard(menu, menu.date))}
                     </View>
                 )}
